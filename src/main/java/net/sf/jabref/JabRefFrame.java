@@ -791,8 +791,7 @@ public class JabRefFrame extends JFrame implements OutputPrinter {
                 output("");
             }
         };
-        worker.getWorker().run();
-        worker.getCallBack().update();
+        worker.startInSwingWorker();
     }
 
     public JabRefPreferences prefs() {

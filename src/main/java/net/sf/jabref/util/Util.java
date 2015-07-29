@@ -75,7 +75,6 @@ import net.sf.jabref.AuthorList;
 import net.sf.jabref.BibtexDatabase;
 import net.sf.jabref.BibtexEntry;
 import net.sf.jabref.BibtexFields;
-import net.sf.jabref.CallBack;
 import net.sf.jabref.EasyDateFormat;
 import net.sf.jabref.EntryMarker;
 import net.sf.jabref.GUIGlobals;
@@ -85,7 +84,6 @@ import net.sf.jabref.JabRefFrame;
 import net.sf.jabref.JabRefPreferences;
 import net.sf.jabref.MetaData;
 import net.sf.jabref.OpenFileFilter;
-import net.sf.jabref.Worker;
 import net.sf.jabref.export.layout.Layout;
 import net.sf.jabref.export.layout.LayoutHelper;
 import net.sf.jabref.external.ExternalFileType;
@@ -1509,32 +1507,6 @@ public class Util {
      */
     public static boolean equals(Object one, Object two) {
         return one == null ? two == null : one.equals(two);
-    }
-
-    /**
-     * Run an AbstractWorker's methods using Spin features to put each method
-     * on the correct thread.
-     * @param worker The worker to run.
-     * @throws Throwable 
-     */
-    public static void runAbstractWorker(AbstractWorker worker) throws Throwable {
-        // This part uses Spin's features:
-        Worker wrk = worker.getWorker();
-        // The Worker returned by getWorker() has been wrapped
-        // by Spin.off(), which makes its methods be run in
-        // a different thread from the EDT.
-        CallBack clb = worker.getCallBack();
-
-        worker.init(); // This method runs in this same thread, the EDT.
-        // Useful for initial GUI actions, like printing a message.
-
-        // The CallBack returned by getCallBack() has been wrapped
-        // by Spin.over(), which makes its methods be run on
-        // the EDT.
-        wrk.run(); // Runs the potentially time-consuming action
-        // without freezing the GUI. The magic is that THIS line
-        // of execution will not continue until run() is finished.
-        clb.update(); // Runs the update() method on the EDT.
     }
 
     /**

@@ -20,19 +20,19 @@ import java.awt.event.ActionEvent;
 import javax.swing.Action;
 
 import net.sf.jabref.*;
-import spin.Spin;
 
 /**
- *
  * @author alver
  */
-public class SaveAllAction extends MnemonicAwareAction implements Worker {
+public class SaveAllAction extends MnemonicAwareAction implements Runnable {
 
     private final JabRefFrame frame;
-    private int databases = 0, saved = 0;
+    private int databases = 0;
 
 
-    /** Creates a new instance of SaveAllAction */
+    /**
+     * Creates a new instance of SaveAllAction
+     */
     public SaveAllAction(JabRefFrame frame) {
         super(GUIGlobals.getImage("saveAll"));
         this.frame = frame;
@@ -44,25 +44,36 @@ public class SaveAllAction extends MnemonicAwareAction implements Worker {
     @Override
     public void actionPerformed(ActionEvent e) {
         databases = frame.getTabbedPane().getTabCount();
-        saved = 0;
         frame.output(Globals.lang("Saving all databases..."));
-        Spin.off(this);
-        run();
-        frame.output(Globals.lang("Save all finished."));
+        new AbstractWorker() {
+            @Override
+            public void run() {
+                SaveAllAction.this.run();
+            }
+
+            @Override
+            public void update() {
+                frame.output(Globals.lang("Save all finished."));
+            }
+        }.startInSwingWorker();
     }
 
     @Override
     public void run() {
         for (int i = 0; i < databases; i++) {
             if (i < frame.getTabbedPane().getTabCount()) {
-                //System.out.println("Base "+i);
                 BasePanel panel = frame.baseAt(i);
                 if (panel.getFile() == null) {
                     frame.showBaseAt(i);
                 }
+
+                try {
+                    Thread.sleep(4000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
                 panel.runCommand("save");
-                // TODO: can we find out whether the save was actually done or not?
-                saved++;
             }
         }
     }

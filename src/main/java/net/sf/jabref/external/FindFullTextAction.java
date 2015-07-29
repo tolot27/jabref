@@ -38,7 +38,7 @@ public class FindFullTextAction extends AbstractWorker {
     }
 
     @Override
-    public void init() throws Throwable {
+    public void init() {
         basePanel.output(Globals.lang("Looking for full text document..."));
     }
 

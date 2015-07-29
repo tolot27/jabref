@@ -533,8 +533,7 @@ public class SearchManager2 extends SidePaneComponent
                 return;
             }
             SearchWorker worker = new SearchWorker(searchRule, searchField.getText());
-            worker.getWorker().run();
-            worker.getCallBack().update();
+            worker.startInSwingWorker();
             escape.setEnabled(true);
 
             frame.basePanel().mainTable.setSelected(0);

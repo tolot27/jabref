@@ -22,19 +22,15 @@ import javax.swing.Action;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
-import net.sf.jabref.Globals;
-import net.sf.jabref.JabRefFrame;
-import net.sf.jabref.MnemonicAwareAction;
-import net.sf.jabref.Worker;
+import net.sf.jabref.*;
 import net.sf.jabref.gui.FileDialogs;
 import net.sf.jabref.util.ResourceExtractor;
-import spin.Spin;
 
 /**
  *
  * @author alver
  */
-public class ExpandEndnoteFilters extends MnemonicAwareAction implements Worker {
+public class ExpandEndnoteFilters extends MnemonicAwareAction implements Runnable {
 
     private final JabRefFrame frame;
     private File file = null;
@@ -70,15 +66,11 @@ public class ExpandEndnoteFilters extends MnemonicAwareAction implements Worker 
             }
         }
 
-        // Spin off the GUI thread, and run the run() method.
-        ((Worker) Spin.off(this)).run();
+        new AbstractWorker.RunnableWorker(this).startInSwingWorker();
 
         file = null;
     }
 
-    /**
-     * Worker method.
-     */
     @Override
     public void run() {
         String FILENAME = "/EndNote.zip";

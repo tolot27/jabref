@@ -15,54 +15,96 @@
 */
 package net.sf.jabref;
 
-import spin.Spin;
+import javax.swing.*;
+import java.lang.reflect.InvocationTargetException;
 
-/**
- * Convenience class for creating an object used for performing a time-
- * consuming action off the Swing thread, and optionally performing GUI
- * work afterwards. This class is supported by runCommand() in BasePanel,
- * which, if the action called is an AbstractWorker, will run its run()
- * method through the Worker interface, and then its update() method through
- * the CallBack interface. This procedure ensures that run() cannot freeze
- * the GUI, and that update() can safely update GUI components.
- */
-public abstract class AbstractWorker implements Worker, CallBack {
+public abstract class AbstractWorker {
 
-    private final Worker worker;
-    private final CallBack callBack;
+    public static class RunnableWorker extends AbstractWorker {
 
+        private final Runnable runnable;
 
-    public AbstractWorker() {
-        worker = (Worker) Spin.off(this);
-        callBack = (CallBack) Spin.over(this);
+        public RunnableWorker(Runnable runnable) {
+            this.runnable = runnable;
+        }
 
+        @Override
+        public void run() {
+            runnable.run();
+        }
     }
 
-    public void init() throws Throwable {
+    /**
+     * Runs in EDT, updating the GUI **before** the actual task is run.
+     */
+    public void init() {
 
     }
 
     /**
-     * This method returns a wrapped Worker instance of this AbstractWorker.
-     * whose methods will automatically be run off the EDT (Swing) thread.
+     * Runs in separate thread outside of EDT, this is the long running task.
      */
-    public Worker getWorker() {
-        return worker;
-    }
+    public abstract void run();
 
     /**
-     * This method returns a wrapped CallBack instance of this AbstractWorker
-     * whose methods will automatically be run on the EDT (Swing) thread.
+     * Runs in EDT, updating the GUI **after** the actual task has been run.
      */
-    public CallBack getCallBack() {
-        return callBack;
-    }
-
-    /**
-     * Empty implementation of the update() method. Override this method
-     * if a callback is needed.
-     */
-    @Override
     public void update() {
+
     }
+
+    /**
+     * Caller can either be the EDT or any other thread.
+     * <p>
+     * The init and update method MUST be executed on the EDT.
+     * If the current thread is already the EDT, the methods are just executed directly.
+     * In the other cases, we use SwingUtilities.invokeAndWait.
+     * <p>
+     * The run method MUST be executed on a separate thread.
+     * As the previous library did block until the method returned, we need to implement a similar synchronous behaviour.
+     * To get this behaviour, we encapsulate this action in its own thread and wait it to finish.
+     */
+    public void startInSwingWorker() {
+        executeInEDTThread(new Runnable() {
+            @Override
+            public void run() {
+                AbstractWorker.this.init();
+            }
+
+        });
+
+        if(!SwingUtilities.isEventDispatchThread()) {
+            AbstractWorker.this.run();
+        } else {
+            System.out.println("EDT THREAD -> run needs to run in separate thread");
+            JabRefExecutorService.INSTANCE.executeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    AbstractWorker.this.run();
+                }
+            });
+        }
+        executeInEDTThread(new Runnable() {
+            @Override
+            public void run() {
+                AbstractWorker.this.update();
+            }
+        });
+    }
+
+    private void executeInEDTThread(Runnable runnable) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            runnable.run();
+        } else {
+            System.out.println("NOT EDT THREAD -> needs to run in EDT!");
+            try {
+                SwingUtilities.invokeAndWait(runnable);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }

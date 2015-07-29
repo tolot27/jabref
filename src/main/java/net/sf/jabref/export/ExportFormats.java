@@ -317,10 +317,7 @@ public class ExportFormats {
                         }
                     };
 
-                    // Run the export action in a background thread:
-                    (exportWorker.getWorker()).run();
-                    // Run the update method:
-                    exportWorker.update();
+                    exportWorker.startInSwingWorker();
                 }
             }
         }

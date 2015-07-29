@@ -31,7 +31,7 @@ import java.util.Vector;
 /**
  * Action for the "Save" and "Save as" operations called from BasePanel. This class is also used for
  * save operations when closing a database or quitting the applications.
- *
+ * <p>
  * The operations run synchronously, but offload the save operation from the event thread using Spin.
  * Callers can query whether the operation was cancelled, or whether it was successful.
  */
@@ -49,7 +49,7 @@ public class SaveDatabaseAction extends AbstractWorker {
     }
 
     @Override
-    public void init() throws Throwable {
+    public void init() {
         success = false;
         cancelled = false;
         fileLockedError = false;
@@ -60,10 +60,10 @@ public class SaveDatabaseAction extends AbstractWorker {
             // Check for external modifications:
             if (panel.isUpdatedExternally() || Globals.fileUpdateMonitor.hasBeenModified(panel.getFileMonitorHandle())) {
 
-                String[] opts = new String[] {Globals.lang("Review changes"), Globals.lang("Save"),
+                String[] opts = new String[]{Globals.lang("Review changes"), Globals.lang("Save"),
                         Globals.lang("Cancel")};
                 int answer = JOptionPane.showOptionDialog(panel.frame(), Globals.lang("File has been updated externally. "
-                        + "What do you want to do?"), Globals.lang("File updated externally"),
+                                + "What do you want to do?"), Globals.lang("File updated externally"),
                         JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
                         null, opts, opts[0]);
                 //  int choice = JOptionPane.showConfirmDialog(frame, Globals.lang("File has been updated externally. "
@@ -73,8 +73,7 @@ public class SaveDatabaseAction extends AbstractWorker {
                 if (answer == JOptionPane.CANCEL_OPTION) {
                     cancelled = true;
                     return;
-                }
-                else if (answer == JOptionPane.YES_OPTION) {
+                } else if (answer == JOptionPane.YES_OPTION) {
                     //try {
 
                     cancelled = true;
@@ -115,17 +114,15 @@ public class SaveDatabaseAction extends AbstractWorker {
                     });
 
                     return;
-                }
-                else { // User indicated to store anyway.
-                       // See if the database has the protected flag set:
+                } else { // User indicated to store anyway.
+                    // See if the database has the protected flag set:
                     Vector<String> pd = panel.metaData().getData(Globals.PROTECTED_FLAG_META);
                     boolean databaseProtectionFlag = (pd != null) && Boolean.parseBoolean(pd.get(0));
                     if (databaseProtectionFlag) {
                         JOptionPane.showMessageDialog(frame, Globals.lang("Database is protected. Cannot save until external changes have been reviewed."),
                                 Globals.lang("Protected database"), JOptionPane.ERROR_MESSAGE);
                         cancelled = true;
-                    }
-                    else {
+                    } else {
                         panel.setUpdatedExternally(false);
                         panel.getSidePaneManager().hide("fileUpdate");
                     }
@@ -174,8 +171,7 @@ public class SaveDatabaseAction extends AbstractWorker {
             if (!FileBasedLock.waitForFileLock(panel.getFile(), 10)) {
                 success = false;
                 fileLockedError = true;
-            }
-            else {
+            } else {
                 // Now save the database:
                 success = saveDatabase(panel.getFile(), false, panel.getEncoding());
 
@@ -230,7 +226,7 @@ public class SaveDatabaseAction extends AbstractWorker {
 
         } catch (UnsupportedCharsetException ex2) {
             JOptionPane.showMessageDialog(frame, Globals.lang("Could not save file. "
-                    + "Character encoding '%0' is not supported.", encoding),
+                            + "Character encoding '%0' is not supported.", encoding),
                     Globals.lang("Save database"), JOptionPane.ERROR_MESSAGE);
             throw new SaveException("rt");
         } catch (SaveException ex) {
@@ -250,7 +246,7 @@ public class SaveDatabaseAction extends AbstractWorker {
 
             JOptionPane.showMessageDialog
                     (frame, Globals.lang("Could not save file")
-                            + ".\n" + ex.getMessage(),
+                                    + ".\n" + ex.getMessage(),
                             Globals.lang("Save database"),
                             JOptionPane.ERROR_MESSAGE);
             throw new SaveException("rt");
@@ -271,7 +267,7 @@ public class SaveDatabaseAction extends AbstractWorker {
             String tryDiff = Globals.lang("Try different encoding");
             int answer = JOptionPane.showOptionDialog(frame, builder.getPanel(), Globals.lang("Save database"),
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null,
-                    new String[] {Globals.lang("Save"), tryDiff, Globals.lang("Cancel")}, tryDiff);
+                    new String[]{Globals.lang("Save"), tryDiff, Globals.lang("Cancel")}, tryDiff);
 
             if (answer == JOptionPane.NO_OPTION) {
                 // The user wants to use another encoding.
@@ -298,7 +294,7 @@ public class SaveDatabaseAction extends AbstractWorker {
             }
         } catch (SaveException e) {
             int ans = JOptionPane.showConfirmDialog(null, Globals.lang("Save failed during backup creation") + ". "
-                    + Globals.lang("Save without backup?"), Globals.lang("Unable to create backup"),
+                            + Globals.lang("Save without backup?"), Globals.lang("Unable to create backup"),
                     JOptionPane.YES_NO_OPTION);
             if (ans == JOptionPane.YES_OPTION) {
                 session.setUseBackup(false);
@@ -313,28 +309,11 @@ public class SaveDatabaseAction extends AbstractWorker {
     }
 
     /**
-     * Run the "Save" operation. This method offloads the actual save operation to a background thread, but
-     * still runs synchronously using Spin (the method returns only after completing the operation).
+     * Run the "Save" operation.
+     * This method offloads the actual save operation to a background thread, but runs synchronously.
      */
-    public void runCommand() throws Throwable {
-        // This part uses Spin's features:
-        Worker wrk = getWorker();
-        // The Worker returned by getWorker() has been wrapped
-        // by Spin.off(), which makes its methods be run in
-        // a different thread from the EDT.
-        CallBack clb = getCallBack();
-
-        init(); // This method runs in this same thread, the EDT.
-        // Useful for initial GUI actions, like printing a message.
-
-        // The CallBack returned by getCallBack() has been wrapped
-        // by Spin.over(), which makes its methods be run on
-        // the EDT.
-        wrk.run(); // Runs the potentially time-consuming action
-        // without freezing the GUI. The magic is that THIS line
-        // of execution will not continue until run() is finished.
-        clb.update(); // Runs the update() method on the EDT.
-
+    public void runCommand() {
+        this.startInSwingWorker();
     }
 
     public void save() throws Throwable {
@@ -345,7 +324,7 @@ public class SaveDatabaseAction extends AbstractWorker {
      * Run the "Save as" operation. This method offloads the actual save operation to a background thread, but
      * still runs synchronously using Spin (the method returns only after completing the operation).
      */
-    public void saveAs() throws Throwable {
+    public void saveAs() {
         String chosenFile = null;
         File f = null;
         while (f == null) {
@@ -360,7 +339,7 @@ public class SaveDatabaseAction extends AbstractWorker {
             if (f.exists() && (JOptionPane.showConfirmDialog
                     (frame, '\'' + f.getName() + "' " + Globals.lang("exists. Overwrite file?"),
                             Globals.lang("Save database"), JOptionPane.OK_CANCEL_OPTION)
-                        != JOptionPane.OK_OPTION)) {
+                    != JOptionPane.OK_OPTION)) {
                 f = null;
             }
         }

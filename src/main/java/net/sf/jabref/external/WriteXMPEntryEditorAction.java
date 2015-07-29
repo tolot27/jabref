@@ -84,12 +84,7 @@ public class WriteXMPEntryEditorAction extends AbstractAction {
 
         // We want to offload the actual work to a background thread, so we have a worker
         // thread:
-        AbstractWorker worker = new WriteXMPWorker(files, entry);
-        // Using Spin, we get a thread that gets synchronously offloaded to a new thread,
-        // blocking the execution of this method:
-        worker.getWorker().run();
-        // After the worker thread finishes, we are unblocked and ready to print the
-        // status message:
+        new WriteXMPWorker(files, entry).startInSwingWorker();
         panel.output(message);
         panel.frame().setProgressBarVisible(false);
         setEnabled(true);

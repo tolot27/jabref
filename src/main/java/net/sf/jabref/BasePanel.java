@@ -1743,8 +1743,6 @@ public class BasePanel extends JPanel implements ClipboardOwner, FileUpdateListe
      * @param _command The name of the command to run.
      */
     public void runCommand(String _command) {
-        //(new Thread() {
-        //  public void run() {
         if (actions.get(_command) == null) {
             Util.pr("No action defined for '" + _command + '\'');
         } else {
@@ -1753,23 +1751,7 @@ public class BasePanel extends JPanel implements ClipboardOwner, FileUpdateListe
                 if (o instanceof BaseAction) {
                     ((BaseAction) o).action();
                 } else {
-                    // This part uses Spin's features:
-                    Worker wrk = ((AbstractWorker) o).getWorker();
-                    // The Worker returned by getWorker() has been wrapped
-                    // by Spin.off(), which makes its methods be run in
-                    // a different thread from the EDT.
-                    CallBack clb = ((AbstractWorker) o).getCallBack();
-
-                    ((AbstractWorker) o).init(); // This method runs in this same thread, the EDT.
-                    // Useful for initial GUI actions, like printing a message.
-
-                    // The CallBack returned by getCallBack() has been wrapped
-                    // by Spin.over(), which makes its methods be run on
-                    // the EDT.
-                    wrk.run(); // Runs the potentially time-consuming action
-                    // without freezing the GUI. The magic is that THIS line
-                    // of execution will not continue until run() is finished.
-                    clb.update(); // Runs the update() method on the EDT.
+                    ((AbstractWorker) o).startInSwingWorker();
                 }
             } catch (Throwable ex) {
                 // If the action has blocked the JabRefFrame before crashing, we need to unblock it.
@@ -1779,8 +1761,6 @@ public class BasePanel extends JPanel implements ClipboardOwner, FileUpdateListe
                 ex.printStackTrace();
             }
         }
-        //  }
-        //}).start();
     }
 
     private boolean saveDatabase(File file, boolean selectedOnly, String encoding, FileActions.DatabaseSaveType saveType) throws SaveException {

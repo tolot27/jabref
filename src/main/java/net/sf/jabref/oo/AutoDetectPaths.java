@@ -50,9 +50,7 @@ public class AutoDetectPaths extends AbstractWorker {
             if (AutoDetectPaths.checkAutoDetectedPaths()) {
                 return true;
             }
-            init();
-            getWorker().run();
-            update();
+            startInSwingWorker();
             return foundPaths;
         } catch (Throwable e) {
             e.printStackTrace();
@@ -74,7 +72,7 @@ public class AutoDetectPaths extends AbstractWorker {
     }
 
     @Override
-    public void init() throws Throwable {
+    public void init() {
         prog = showProgressDialog(parent, Globals.lang("Autodetecting paths..."),
                 Globals.lang("Please wait..."), true);
     }

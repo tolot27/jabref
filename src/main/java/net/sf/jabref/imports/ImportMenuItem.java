@@ -63,10 +63,7 @@ public class ImportMenuItem extends JMenuItem implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        MyWorker worker = new MyWorker();
-        worker.init();
-        worker.getWorker().run();
-        worker.getCallBack().update();
+        new MyWorker().startInSwingWorker();
     }
 
     /**
@@ -78,9 +75,7 @@ public class ImportMenuItem extends JMenuItem implements ActionListener {
         MyWorker worker = new MyWorker();
         worker.fileOk = true;
         worker.filenames = filenames;
-
-        worker.getWorker().run();
-        worker.getCallBack().update();
+        worker.startInSwingWorker();
     }
 
 

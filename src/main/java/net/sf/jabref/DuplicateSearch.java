@@ -21,6 +21,7 @@
 
 package net.sf.jabref;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -28,7 +29,6 @@ import javax.swing.SwingUtilities;
 
 import net.sf.jabref.undo.NamedCompound;
 import net.sf.jabref.undo.UndoableRemoveEntry;
-import spin.Spin;
 
 public class DuplicateSearch implements Runnable {
 
@@ -98,7 +98,19 @@ public class DuplicateSearch implements Runnable {
                     DuplicateCallBack cb = new DuplicateCallBack(panel.frame, be[0], be[1],
                             askAboutExact ? DuplicateResolverDialog.DUPLICATE_SEARCH_WITH_EXACT :
                                     DuplicateResolverDialog.DUPLICATE_SEARCH);
-                    ((CallBack) (Spin.over(cb))).update();
+
+                    try {
+                        SwingUtilities.invokeAndWait(new Runnable() {
+                            @Override
+                            public void run() {
+                                cb.update();
+                            }
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
 
                     duplicateCounter++;
                     int answer = cb.getSelected();
@@ -184,7 +196,7 @@ public class DuplicateSearch implements Runnable {
         }
     }
 
-    static class DuplicateCallBack implements CallBack {
+    static class DuplicateCallBack {
 
         private int reply = -1;
         DuplicateResolverDialog diag;
@@ -207,7 +219,6 @@ public class DuplicateSearch implements Runnable {
             return reply;
         }
 
-        @Override
         public void update() {
             diag = new DuplicateResolverDialog(frame, one, two, dialogType);
             diag.setVisible(true);

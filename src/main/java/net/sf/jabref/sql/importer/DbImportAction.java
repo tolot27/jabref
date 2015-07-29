@@ -44,10 +44,9 @@ import net.sf.jabref.sql.SQLUtil;
 /**
  * Created by IntelliJ IDEA. User: alver Date: Mar 27, 2008 Time: 6:09:08 PM To
  * change this template use File | Settings | File Templates.
- * 
+ * <p>
  * Jan. 20th Changed to accomodate the new way to connect to DB and also to show
  * the exceptions and to display more than one DB imported (by ifsteinm)
- * 
  */
 public class DbImportAction extends AbstractWorker {
 
@@ -73,16 +72,11 @@ public class DbImportAction extends AbstractWorker {
         public DbImpAction() {
             super(GUIGlobals.getImage("dbImport"));
             putValue(Action.NAME, "Import from external SQL database");
-
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            try {
-                Util.runAbstractWorker(DbImportAction.this);
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
-            }
+            startInSwingWorker();
         }
     }
 
@@ -186,7 +180,7 @@ public class DbImportAction extends AbstractWorker {
                 String errorMessage = SQLUtil.getExceptionMessage(ex);
                 dbs.isConfigValid(false);
                 JOptionPane.showMessageDialog(frame, Globals.lang(preamble)
-                        + '\n' + errorMessage,
+                                + '\n' + errorMessage,
                         Globals.lang("Import from SQL database"),
                         JOptionPane.ERROR_MESSAGE);
                 frame.output(Globals.lang("Error importing from database"));

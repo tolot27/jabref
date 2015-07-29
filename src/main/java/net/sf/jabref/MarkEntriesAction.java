@@ -51,13 +51,7 @@ public class MarkEntriesAction extends AbstractWorker implements ActionListener 
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        try {
-            this.init();
-            getWorker().run();
-            getCallBack().update();
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
+        this.startInSwingWorker();
     }
 
     @Override

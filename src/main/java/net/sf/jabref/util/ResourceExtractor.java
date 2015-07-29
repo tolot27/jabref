@@ -22,7 +22,6 @@ import java.net.URL;
 
 import net.sf.jabref.Globals;
 import net.sf.jabref.JabRef;
-import net.sf.jabref.Worker;
 import net.sf.jabref.net.URLDownload;
 
 /**
@@ -35,7 +34,7 @@ import net.sf.jabref.net.URLDownload;
  *
  * @author alver
  */
-public class ResourceExtractor implements Worker {
+public class ResourceExtractor implements Runnable {
 
     private final URL resource;
     private final Component parent;

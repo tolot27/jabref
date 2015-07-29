@@ -774,8 +774,7 @@ public class GroupSelector extends SidePaneComponent implements
         }
         SearchRule searchRule = invCb.isSelected() ? new InvertSearchRule(searchRules) : searchRules;
         GroupingWorker worker = new GroupingWorker(searchRule, SearchRule.DUMMY_QUERY);
-        worker.getWorker().run();
-        worker.getCallBack().update();
+        worker.startInSwingWorker();
         /*panel.setGroupMatcher(new SearchMatcher(searchRules, searchOptions));
         DatabaseSearch search = new DatabaseSearch(this, searchOptions, searchRules,
                 panel, Globals.GROUPSEARCH, floatCb.isSelected(), Globals.prefs

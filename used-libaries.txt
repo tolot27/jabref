@@ -161,7 +161,3 @@ Project: XStream
 URL:     http://xstream.codehaus.org/
 License: BSD (http://xstream.codehaus.org/license.html)
 
-Path:    lib/spin.jar
-Project: Spin
-URL:     http://spin.sourceforge.net/
-License: LGPL 2.1+

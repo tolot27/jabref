@@ -51,7 +51,6 @@ public class DbConnectAction implements BaseAction {
         @Override
         public void actionPerformed(ActionEvent e) {
             action();
-
         }
     }
 
