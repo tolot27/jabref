@@ -38,6 +38,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URL;
+import java.util.Optional;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -48,14 +49,15 @@ import javax.swing.text.JTextComponent;
 
 import net.sf.jabref.gui.GUIGlobals;
 import net.sf.jabref.gui.fieldeditors.FieldEditor;
+import net.sf.jabref.logic.fetcher.CrossRef;
 import net.sf.jabref.logic.l10n.Localization;
 import net.sf.jabref.util.CaseChangeMenu;
 import net.sf.jabref.logic.util.NameListNormalizer;
+import net.sf.jabref.util.DOI;
 import net.sf.jabref.util.GoogleUrlCleaner;
 
 public class FieldTextMenu implements MouseListener
 {
-
     private final FieldEditor myFieldName;
     private final JPopupMenu inputMenu = new JPopupMenu();
     private final CopyAction copyAct = new CopyAction();
@@ -72,6 +74,7 @@ public class FieldTextMenu implements MouseListener
         inputMenu.addSeparator();
         inputMenu.add(new ReplaceAction());
         inputMenu.add(new UrlAction());
+        inputMenu.add(new DOIAction());
 
         if (myFieldName.getTextComponent() instanceof JTextComponent) {
             inputMenu.add(new CaseChangeMenu((JTextComponent) myFieldName.getTextComponent()));
@@ -265,6 +268,29 @@ public class FieldTextMenu implements MouseListener
             }
             String input = myFieldName.getText();
             myFieldName.setText(GoogleUrlCleaner.cleanUrl(input));
+        }
+    }
+
+    class DOIAction extends BasicAction {
+
+        public DOIAction() {
+            super("Retrieve DOI");
+            putValue(Action.SHORT_DESCRIPTION, Localization.lang("Retrieve DOI from CrossRef"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent evt) {
+            if (myFieldName.getText().isEmpty()) {
+                return;
+            }
+            String input = myFieldName.getText();
+            // FIXME: I need the whole BibTex entry here!
+            BibtexEntry entry = new BibtexEntry("asdf");
+            entry.setField("title", input);
+            Optional<DOI> doi = CrossRef.findDOI(entry);
+            if(doi.isPresent()) {
+                myFieldName.setText(doi.get().getDOI());
+            }
         }
     }
 
