@@ -2,27 +2,9 @@ machine:
   java:
     version: oraclejdk8
 
-dependencies:
-  pre:
-    - scripts/prepare-install4j.sh
-    - install4j6/bin/install4jc --verbose --license=$INSTALL4J_KEY
-  override:
-    - TERM=dumb ./gradlew getdeps
-  cache_directories:
-    - "~/.install4j6"
-    - "~/downloads"
-
 test:
   override:
     - TERM=dumb ./gradlew test
-  post:
-    - if [[ ! -z $COVERITY_ACCESS_TOKEN ]] ; then TERM=dumb ./gradlew coverityCheck ; fi
-    - mkdir -p $CIRCLE_TEST_REPORTS/junit/
-    - find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
-    - TERM=dumb ./gradlew jacocoTestReport coveralls
-    - bash <(curl -s https://codecov.io/bash)
-    - TERM=dumb ./gradlew -Pdev=true -Pinstall4jDir="install4j6" release --stacktrace
-    - timeout 580 scripts/upload-to-builds.jabref.org.sh || exit 0
 
 general:
   artifacts:
