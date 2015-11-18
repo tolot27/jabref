@@ -197,10 +197,14 @@ public class MainTableFormat implements TableFormat<BibtexEntry> {
 
     private Object modifyIconForMultipleLinks(JLabel label) {
         Icon icon = label.getIcon();
+        if(icon == null) {
+            return label; // return label unmodified
+        }
         BufferedImage bufImg = new BufferedImage(
-                icon.getIconWidth(),
-                icon.getIconHeight(),
-                BufferedImage.TYPE_INT_ARGB);
+                    icon.getIconWidth(),
+                    icon.getIconHeight(),
+                    BufferedImage.TYPE_INT_ARGB);
+
         Graphics g = bufImg.createGraphics();
         // paint the Icon to the BufferedImage.
         icon.paintIcon(null, g, 0, 0);
