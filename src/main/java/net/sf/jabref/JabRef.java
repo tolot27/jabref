@@ -661,7 +661,8 @@ public class JabRef {
         // Or... it doesn't work, period.
         // TODO test and maybe remove this! I found this commented out with no additional info ( payload@lavabit.com )
         // Enabled since JabRef 2.11 beta 4
-        System.setProperty("swing.aatext", "true");
+        // Disabled for JabRef 3.0 on 2015-11-19
+        // System.setProperty("swing.aatext", "true");
         // Default is "on".
         // "lcd" instead of "on" because of http://wiki.netbeans.org/FaqFontRendering and http://docs.oracle.com/javase/6/docs/technotes/guides/2d/flags.html#aaFonts 
         System.setProperty("awt.useSystemAAFontSettings", "lcd");
