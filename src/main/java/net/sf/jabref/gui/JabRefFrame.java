@@ -127,7 +127,7 @@ public class JabRefFrame extends JFrame implements OutputPrinter {
 
     private PositionWindow pw;
 
-    private final GeneralAction checkIntegrity = new GeneralAction(Actions.CHECK_INTEGRITY, Localization.lang("Check integrity")) {
+    private final GeneralAction checkIntegrity = new GeneralAction(Actions.CHECK_INTEGRITY, Localization.menuTitle("Check integrity")) {
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -247,6 +247,7 @@ public class JabRefFrame extends JFrame implements OutputPrinter {
     public JToggleButton fetcherToggle;
 
     final OpenDatabaseAction open = new OpenDatabaseAction(this, true);
+    private final AbstractAction editModeAction = new EditModeAction();
     private final AbstractAction quit = new CloseAction();
     private final AbstractAction selectKeys = new SelectKeysAction();
     private final AbstractAction newDatabaseAction = new NewDatabaseAction(this);
@@ -295,12 +296,12 @@ public class JabRefFrame extends JFrame implements OutputPrinter {
             Localization.lang("Back"), prefs.getKey(KeyBinds.BACK), IconTheme.JabRefIcon.LEFT.getIcon());
     final AbstractAction deleteEntry = new GeneralAction(Actions.DELETE, Localization.menuTitle("Delete entry"),
             Localization.lang("Delete entry"), prefs.getKey(KeyBinds.DELETE_ENTRY), IconTheme.JabRefIcon.DELETE_ENTRY.getIcon());
-    private final AbstractAction copy = new EditAction(Actions.COPY, Localization.lang("Copy"),
-            IconTheme.JabRefIcon.COPY.getIcon());
-    private final AbstractAction paste = new EditAction(Actions.PASTE, Localization.lang("Paste"),
-            IconTheme.JabRefIcon.PASTE.getIcon());
-    private final AbstractAction cut = new EditAction(Actions.CUT, Localization.lang("Cut"),
-            IconTheme.JabRefIcon.CUT.getIcon());
+    private final AbstractAction copy = new EditAction(Actions.COPY, Localization.menuTitle("Copy"),
+            Localization.lang("Copy"), prefs.getKey(KeyBinds.COPY), IconTheme.JabRefIcon.COPY.getIcon());
+    private final AbstractAction paste = new EditAction(Actions.PASTE, Localization.menuTitle("Paste"),
+            Localization.lang("Paste"), prefs.getKey(KeyBinds.PASTE), IconTheme.JabRefIcon.PASTE.getIcon());
+    private final AbstractAction cut = new EditAction(Actions.CUT, Localization.menuTitle("Cut"),
+            Localization.lang("Cut"), prefs.getKey(KeyBinds.CUT), IconTheme.JabRefIcon.CUT.getIcon());
     private final AbstractAction mark = new GeneralAction(Actions.MARK_ENTRIES, Localization.menuTitle("Mark entries"),
             Localization.lang("Mark entries"), prefs.getKey(KeyBinds.MARK_ENTRIES), IconTheme.JabRefIcon.MARK_ENTRIES.getIcon());
     private final AbstractAction unmark = new GeneralAction(Actions.UNMARK_ENTRIES,
@@ -659,18 +660,26 @@ public class JabRefFrame extends JFrame implements OutputPrinter {
         }
     }
 
+    /**
+     * Sets the title of the main window.
+     */
     public void setWindowTitle() {
-        // Set window title:
-        BasePanel bp = getCurrentBasePanel();
-        if (bp == null) {
-            setTitle(GUIGlobals.frameTitle);
+        BasePanel panel = getCurrentBasePanel();
+        String mode = biblatexMode ? " (" + Localization.lang("%0 mode", "BibLaTeX") + ")" : " (" + Localization.lang("%0 mode", "BibTeX") + ")";
+
+        // no database open
+        if (panel == null) {
+            setTitle(GUIGlobals.frameTitle + mode);
             return;
         }
-        String star = bp.isBaseChanged() ? "*" : "";
-        if (bp.getDatabaseFile() != null) {
-            setTitle(GUIGlobals.frameTitle + " - " + bp.getDatabaseFile().getPath() + star);
+
+        String changeFlag = panel.isBaseChanged() ? "*" : "";
+
+        if (panel.getDatabaseFile() != null) {
+            String databaseFile = panel.getDatabaseFile().getPath();
+            setTitle(GUIGlobals.frameTitle + " - " + databaseFile + changeFlag + mode);
         } else {
-            setTitle(GUIGlobals.frameTitle + " - " + GUIGlobals.untitledTitle + star);
+            setTitle(GUIGlobals.frameTitle + " - " + GUIGlobals.untitledTitle + changeFlag + mode);
         }
     }
 
@@ -1157,11 +1166,13 @@ public class JabRefFrame extends JFrame implements OutputPrinter {
         sessions.add(saveSessionAction);
         file.add(sessions);
         file.add(fileHistory);
-
+        file.addSeparator();
+        file.add(editModeAction);
         file.addSeparator();
         file.add(closeDatabaseAction);
         file.add(quit);
         mb.add(file);
+
         edit.add(undo);
         edit.add(redo);
 
@@ -1601,7 +1612,7 @@ public class JabRefFrame extends JFrame implements OutputPrinter {
             metaData = new MetaData();
         }
         if (encoding == null) {
-            encoding = Charset.forName(Globals.prefs.get(JabRefPreferences.DEFAULT_ENCODING));
+            encoding = Globals.prefs.getDefaultEncoding();
         }
 
         BasePanel bp = new BasePanel(JabRefFrame.this, db, file, metaData, encoding);
@@ -2107,22 +2118,18 @@ public class JabRefFrame extends JFrame implements OutputPrinter {
      * relevant name in its action map.
      */
     class EditAction extends MnemonicAwareAction {
+
         private final String command;
 
-
-        public EditAction(String command, String name, Icon icon) {
+        public EditAction(String command, String menuTitle, String description, KeyStroke key, Icon icon) {
             super(icon);
             this.command = command;
-            String nName = EntryUtil.capitalizeFirst(command);
-            putValue(Action.NAME, nName);
-            putValue(Action.ACCELERATOR_KEY, prefs.getKey(nName));
-            putValue(Action.SHORT_DESCRIPTION, name);
-            //putValue(ACCELERATOR_KEY,
-            //         (next?prefs.getKey(KeyBinds.NEXT_TAB):prefs.getKey(KeyBinds.PREVIOUS_TAB)));
+            putValue(Action.NAME, menuTitle);
+            putValue(Action.ACCELERATOR_KEY, key);
+            putValue(Action.SHORT_DESCRIPTION, description);
         }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
+        @Override public void actionPerformed(ActionEvent e) {
 
             LOGGER.debug(Globals.focusListener.getFocused().toString());
             JComponent source = Globals.focusListener.getFocused();

@@ -205,7 +205,7 @@ public class ManageKeywordsAction extends MnemonicAwareAction {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 // keywordList.getSelectedIndices(); does not work, therefore we operate on the values
-                String[] values = (String[]) keywordList.getSelectedValuesList().toArray();
+                String[] values = keywordList.getSelectedValuesList().toArray(new String[0]);
 
                 for (String val : values) {
                     keywordListModel.removeElement(val);
@@ -405,7 +405,7 @@ public class ManageKeywordsAction extends MnemonicAwareAction {
     }
 
     private static HashSet<String> createClone(HashSet<String> keywordsToAdd) {
-        return (HashSet<String>) keywordsToAdd.clone();
+        return new HashSet<>(keywordsToAdd);
     }
 
     private void fillKeyWordList() {

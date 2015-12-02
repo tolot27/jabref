@@ -19,6 +19,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -168,6 +169,8 @@ public abstract class DBExporter extends DBImporterExporter {
             try (ResultSet rs = ((Statement) response).getResultSet()) {
                 rs.next();
                 myID = rs.getInt("groups_id");
+            } finally {
+                ((Statement) response).close();
             }
         }
         for (Enumeration<GroupTreeNode> e = cursor.children(); e.hasMoreElements();) {
@@ -280,6 +283,8 @@ public abstract class DBExporter extends DBImporterExporter {
             try (ResultSet rs = ((Statement) response).getResultSet()) {
                 rs.next();
                 myID = rs.getInt("groups_id");
+            } finally {
+                ((Statement) response).close();
             }
         }
         for (Enumeration<GroupTreeNode> e = cursor.children(); e.hasMoreElements();) {
@@ -303,7 +308,6 @@ public abstract class DBExporter extends DBImporterExporter {
                     "SELECT COUNT(*) AS amount FROM group_types"); ResultSet res = sm.getResultSet()) {
                 res.next();
                 quantity = res.getInt("amount");
-                res.getStatement().close();
             }
         }
         if (quantity == 0) {
@@ -364,9 +368,10 @@ public abstract class DBExporter extends DBImporterExporter {
      * @param metaData The MetaData object containing the groups information
      * @param keySet The set of IDs of the entries to export.
      * @param file The name of the file to which the DML should be written
+     * @param encoding The encoding to be used
      */
     public void exportDatabaseAsFile(final BibtexDatabase database, final MetaData metaData, Set<String> keySet,
-            String file) throws Exception {
+            String file, Charset encoding) throws Exception {
 
         // open output file
         File outfile = new File(file);
@@ -415,7 +420,6 @@ public abstract class DBExporter extends DBImporterExporter {
                 conn.commit();
                 conn.setAutoCommit(true);
             }
-            conn.close();
             if (redisplay) {
                 exportDatabaseToDBMS(database, metaData, keySet, databaseStrings, frame);
             }
@@ -426,6 +430,10 @@ public abstract class DBExporter extends DBImporterExporter {
                 }
             }
             throw ex;
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
         }
     }
 
@@ -458,7 +466,8 @@ public abstract class DBExporter extends DBImporterExporter {
     }
 
     private Vector<Vector<String>> createExistentDBNamesMatrix(DBStrings databaseStrings) throws Exception {
-        try (ResultSet rs = SQLUtil.queryAllFromTable(this.connectToDB(databaseStrings), "jabref_database")) {
+        try (Connection conn = this.connectToDB(databaseStrings);
+                ResultSet rs = SQLUtil.queryAllFromTable(conn, "jabref_database")) {
             Vector<String> v;
             Vector<Vector<String>> matrix = new Vector<>();
             dbNames.clear();

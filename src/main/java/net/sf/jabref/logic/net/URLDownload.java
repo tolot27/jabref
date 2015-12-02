@@ -16,7 +16,6 @@
 package net.sf.jabref.logic.net;
 
 import net.sf.jabref.Globals;
-import net.sf.jabref.JabRefPreferences;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -101,7 +100,7 @@ public class URLDownload {
      * @throws IOException
      */
     public String downloadToString() throws IOException {
-        return downloadToString(Charset.forName(Globals.prefs.get(JabRefPreferences.DEFAULT_ENCODING)));
+        return downloadToString(Globals.prefs.getDefaultEncoding());
     }
 
     public String downloadToString(Charset encoding) throws IOException {
@@ -112,7 +111,7 @@ public class URLDownload {
             return output.toString();
         } catch (IOException e) {
             LOGGER.warn("Could not copy input", e);
-            return "";
+            throw e;
         }
     }
 
@@ -136,6 +135,7 @@ public class URLDownload {
             copy(input, output);
         } catch (IOException e) {
             LOGGER.warn("Could not copy input", e);
+            throw e;
         }
     }
 
